@@ -28,6 +28,7 @@
   <p id="count"></p>
   <p id="mean"></p>
   <p id="sd"></p>
+  <p id="correlation"></p>
 
   <script>
     // if true, the experiment is currently active
@@ -53,6 +54,7 @@
     let stdDevElement = document.getElementById('sd');
     let instructionElement = document.getElementById('instruction');
     let stimulusElement = document.getElementById('stimulus');
+    let correlationElement = document.getElementById('correlation');
 
     function getMean(data) {
       let sum = 0;
@@ -74,13 +76,21 @@
       stdDevElement.textContent = '';
     }
 
+    function calculateCorrelation(){
+      let timeStandardDeviation = getStandardDeviation(times);
+      let timeMean = getMean(time);
+      let distanceStandardDeviation = getStandardDeviation()
+    }
+
     function showResults() {
       let meanDeltaTime = getMean(times);
       let stdDev = getStandardDeviation(times);
+      let correlation = calculateCorrelation();
 
       countElement.textContent = 'Count: ' + times.length;
       meanElement.textContent = 'Mean: ' + Math.round(meanDeltaTime) + ' ms';
       stdDevElement.textContent = 'SD: ' + Math.round(stdDev) + ' ms';
+      correlationElement.textContent = 'Correlation: ' + correlation;
     }
 
     function setStimulusColor(newColor, alpha) {
