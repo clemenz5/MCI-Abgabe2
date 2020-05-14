@@ -86,10 +86,22 @@
       meanDistElement.textContent = '';
     }
 
+    function calculateKovarianz(){
+      let meanTime = getMean(times); 
+      let meanDistance = getMean(distance);
+      let kovarianzHelper = 0;
+      var i;
+      for (i = 0; i < times.length(); i++) {
+        kovarianzHelper += ((times[i] - meanTime) ** 2) * ((distance[i] - meanDistance) ** 2);
+      }
+      return kovarianzHelper /= times.length();
+    }
+
     function calculateCorrelation(){
       let timeStandardDeviation = getStandardDeviation(times);
-      let timeMean = getMean(time);
-      let distanceStandardDeviation = getStandardDeviation()
+      let distanceStandardDeviation = getStandardDeviation(distance);
+      let kovarianz = calculateKovarianz();
+      return (kovarianz / (timeStandardDeviation * distanceStandardDeviation));
     }
 
     function showResults() {
