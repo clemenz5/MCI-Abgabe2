@@ -27,6 +27,7 @@
   <p id="time"></p>
   <p id="count"></p>
   <p id="mean"></p>
+  <p id="meanDist"></p>
   <p id="sd"></p>
   <p id="correlation"></p>
 
@@ -47,10 +48,18 @@
     // recorded reaction times in milliseconds
     let times = [];
 
+    // recorded distences to center of the screen
+    let distance = [];
+
+    // coordinates of the stimulus
+    let stimX;
+    let stimY;
+
     // DOM elements
     let timeElement = document.getElementById('time');
     let countElement = document.getElementById('count');
     let meanElement = document.getElementById('mean');
+    let meanDistElement = document.getElementById('meanDist');
     let stdDevElement = document.getElementById('sd');
     let instructionElement = document.getElementById('instruction');
     let stimulusElement = document.getElementById('stimulus');
@@ -74,6 +83,7 @@
       countElement.textContent = '';
       meanElement.textContent = '';
       stdDevElement.textContent = '';
+      meanDistElement.textContent = '';
     }
 
     function calculateCorrelation(){
@@ -84,11 +94,13 @@
 
     function showResults() {
       let meanDeltaTime = getMean(times);
+      let meanDealtaDist = getMean(distance);
       let stdDev = getStandardDeviation(times);
       let correlation = calculateCorrelation();
 
       countElement.textContent = 'Count: ' + times.length;
       meanElement.textContent = 'Mean: ' + Math.round(meanDeltaTime) + ' ms';
+      meanDistElement.textContent = 'Mean Distance: ' + Math.round(meanDealtaDist) + ' px';
       stdDevElement.textContent = 'SD: ' + Math.round(stdDev) + ' ms';
       correlationElement.textContent = 'Correlation: ' + correlation;
     }
@@ -116,14 +128,24 @@
       makeTheCircleBoiDarkerAlotOfTimes()
       stimulusIsVisible = true;
       stimulusTimestamp = Date.now();
-      stimulusElement.style.top = getRndInteger(50, window.innerHeight-50);
-      stimulusElement.style.left = getRndInteger(0, window.innerWidth-50);
+      stimX = getRndInteger(0, window.innerWidth-50);
+      stimY = getRndInteger(50, window.innerHeight-50);
+      stimulusElement.style.top = stimY;
+      stimulusElement.style.left = stimX;
     }
 
     function recordStimulusReactionTime() {
       let deltaTime = Date.now() - stimulusTimestamp;
       times.push(deltaTime);
       timeElement.textContent = deltaTime + ' ms';
+    }
+
+    function recordStimulusDistance(){
+        let distX;
+        let distY;
+        distX = Math.abs(window.innerWidth/2 - stimX);
+        distY = Math.abs(window.innerHeight/2 - stimY);
+        distance.push(Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2)));
     }
 
     function makeTheCircleBoiDarkerAlotOfTimes() {
@@ -151,6 +173,7 @@
 
       // reset data and start tests
       times = [];
+      distance = [];
       experimentActive = true;
       startTestTrial();
     }
@@ -178,6 +201,7 @@
         if (stimulusIsVisible) {
           // record reaction time
           recordStimulusReactionTime();
+          recordStimulusDistance();
           // start next trial
           startTestTrial();
         }
