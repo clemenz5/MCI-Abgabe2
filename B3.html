@@ -1,0 +1,222 @@
+<html>
+
+<head>
+    <title>Human Capabilities - Reaction test</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 id="title">User Study</h1>
+    <h2 id="instruction">Press space to start!</h2>
+    <p id="time"></p>
+    <p id="word"></p>
+    <p id="count"></p>
+    <p id="mean"></p>
+    <p id="meanDist"></p>
+    <p id="sd"></p>
+    <p id="correlation"></p>
+    <p id="faults"></p>
+
+    <script>
+        // if true, the experiment is currently active
+        let experimentActive = false;
+
+        // time at which the stimulus last appeared (in milliseconds, see Date.now())
+        let stimulusTimestamp;
+
+        // ID of the timeout that is scheduled to make the stimulus appear.
+        // Used to cancel tests when the experiment ends.
+        let testStimulusTimeout;
+
+        // recorded reaction times in milliseconds
+        let times = [];
+
+        // the amount of faults
+        let faults = 0;
+
+        // the total amount of tries
+        let count = 0;
+
+        // the current word
+        let stimword;
+
+        // the current index
+        let index = 0;
+
+        // language enums
+        const LanguageEnums = Object.freeze({"french": 1, "english": 2, "german": 3});
+
+        const wordList = [['normal', LanguageEnums.english], ['sand', LanguageEnums.english], ['revolution', LanguageEnums.english], ['alphabet', LanguageEnums.english], ['blond', LanguageEnums.english], ['computer', LanguageEnums.english], ['film', LanguageEnums.english], ['finger', LanguageEnums.english], ['golf', LanguageEnums.english], ['minute', LanguageEnums.english],
+        ['jeans', LanguageEnums.french], ['weekend', LanguageEnums.french], ['ski', LanguageEnums.french], ['chauffeur', LanguageEnums.french], ['bus', LanguageEnums.french], ['code', LanguageEnums.french], ['pervers', LanguageEnums.french], ['transparent', LanguageEnums.french], ['verbal', LanguageEnums.french],
+        ['smoking', LanguageEnums.german], ['sexy', LanguageEnums.german], ['balance', LanguageEnums.german], ['cool', LanguageEnums.german], ['baby', LanguageEnums.german], ['taxi', LanguageEnums.german], ['stop', LanguageEnums.german], ['fair', LanguageEnums.german], ['party', LanguageEnums.german], ['rose', LanguageEnums.german]];
+
+        // DOM elements
+        let timeElement = document.getElementById('time');
+        let countElement = document.getElementById('count');
+        let meanElement = document.getElementById('mean');
+        let meanDistElement = document.getElementById('meanDist');
+        let stdDevElement = document.getElementById('sd');
+        let instructionElement = document.getElementById('instruction');
+        let correlationElement = document.getElementById('correlation');
+        let faultElement = document.getElementById('faults');
+        let wordElement = document.getElementById('word');
+
+        function getMean(data) {
+            let sum = 0;
+            for (let value of data) sum += value;
+            return sum / data.length;
+        }
+
+        function getStandardDeviation(data) {
+            let mean = getMean(data);
+            let squareSum = 0;
+            for (let value of data) squareSum += (value - mean) ** 2;
+            return Math.sqrt(squareSum / data.length);
+        }
+
+        function clearResults() {
+            timeElement.textContent = '';
+            countElement.textContent = '';
+            meanElement.textContent = '';
+            stdDevElement.textContent = '';
+            meanDistElement.textContent = '';
+        }
+
+        function calculateKovarianz() {
+            let meanTime = getMean(times);
+            let meanDistance = getMean(distance);
+            let kovarianzHelper = 0;
+            var i;
+            for (i = 0; i < times.length; i++) {
+                kovarianzHelper += ((times[i] - meanTime) ** 2) * ((distance[i] - meanDistance) ** 2);
+            }
+            return kovarianzHelper /= times.length;
+        }
+
+        function calculateCorrelation() {
+            let timeStandardDeviation = getStandardDeviation(times);
+            let distanceStandardDeviation = getStandardDeviation(distance);
+            let kovarianz = calculateKovarianz();
+            return (kovarianz / (timeStandardDeviation * distanceStandardDeviation));
+        }
+
+        function showResults() {
+            let meanDeltaTime = getMean(times);
+            let meanDealtaDist = getMean(distance);
+            let stdDev = getStandardDeviation(times);
+            let correlation = calculateCorrelation();
+
+            countElement.textContent = 'Count: ' + (times.length + faults);
+            meanElement.textContent = 'Mean: ' + Math.round(meanDeltaTime) + ' ms';
+            meanDistElement.textContent = 'Mean Distance: ' + Math.round(meanDealtaDist) + ' px';
+            stdDevElement.textContent = 'SD: ' + Math.round(stdDev) + ' ms';
+            correlationElement.textContent = 'Correlation: ' + correlation;
+            faultElement.textContent = 'Faults: ' + faults;
+        }
+
+        function startTestTrial() {
+            stimulusTimestamp = Date.now();
+            showStimulus()
+        }
+
+        function showStimulus() {
+            stimword = wordList[index];
+            wordElement.textContent = stimword[0];
+            index++;
+        }
+
+        function recordStimulusReactionTime() {
+            let deltaTime = Date.now() - stimulusTimestamp;
+            times.push(deltaTime);
+            timeElement.textContent = deltaTime + ' ms';
+        }
+
+        function getRndInteger(min, max) {
+            return Math.floor(Math.random() * (max - min)) + min;
+        }
+
+        function startExperiment() {
+            clearResults(); // clear results of any previous tests
+            instructionElement.textContent =
+                "Press 1 for french, 2 for english and 3 for german";
+
+            // reset data and start tests
+            times = [];
+            distance = [];
+            faults = 0;
+            experimentActive = true;
+            shuffle(wordList);
+            startTestTrial();
+        }
+
+        function shuffle(a) {
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function stopExperiment() {
+            // cancel any ongoing tests
+            clearTimeout(testStimulusTimeout);
+            stimulusIsVisible = false;
+            experimentActive = false;
+
+            // reset instruction and show results
+            instruction.textContent = 'Press space to start!';
+            showResults();
+        }
+
+        window.addEventListener('keydown', (event) => {
+            if (event.key === ' ') {
+                // the user pressed the space key
+                if (!experimentActive) {
+                    // start the experiment if it wasn't active
+                    startExperiment();
+                    return;
+                }
+
+            } else if (event.key === 'a') {
+                if (experimentActive) {
+                    // stop the experiment and show results
+                    stopExperiment();
+                }
+            } else if (event.key === '1') {
+                // the french key
+                if (stimword[1] == LanguageEnums.french) {
+                    recordStimulusReactionTime();
+                    startTestTrial();
+                } else {
+                    faults++;
+                    startTestTrial();
+                }
+            } else if (event.key === '2') {
+                // the englisch key
+                if (stimword[1] == LanguageEnums.english) {
+                    recordStimulusReactionTime();
+                    startTestTrial();
+                } else {
+                    faults++;
+                    startTestTrial();
+                }
+            } else if (event.key === '3') {
+                // the german key
+                if (stimword[1] == LanguageEnums.german) {
+                    recordStimulusReactionTime();
+                    startTestTrial();
+                } else {
+                    faults++;
+                    startTestTrial();
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
