@@ -92,6 +92,7 @@
         let stdDevGreenElement = document.getElementById('sdGreen');
         let instructionElement = document.getElementById('instruction');
         let circleStimulus = document.getElementById('circleStimulus');
+        let correlationElement = document.getElementById('correlation');
         let squareStimulus = document.getElementById('squareStimulus');
         let faultElement = document.getElementById('faults');
         let faultElementRed = document.getElementById('faultsRed');
@@ -118,6 +119,24 @@
             meanDistElement.textContent = '';
         }
 
+        function calculateKovarianz() {
+            let meanTime = getMean(times);
+            let meanDistance = getMean(distance);
+            let kovarianzHelper = 0;
+            var i;
+            for (i = 0; i < times.length; i++) {
+                kovarianzHelper += ((times[i] - meanTime) ** 2) * ((distance[i] - meanDistance) ** 2);
+            }
+            return kovarianzHelper /= times.length;
+        }
+
+        function calculateCorrelation() {
+            let timeStandardDeviation = getStandardDeviation(times);
+            let distanceStandardDeviation = getStandardDeviation(distance);
+            let kovarianz = calculateKovarianz();
+            return (kovarianz / (timeStandardDeviation * distanceStandardDeviation));
+        }
+
         function showResults() {
             count = countRed + countGreen;
             faults = faultsRed + faultsGreen;
@@ -131,7 +150,7 @@
             let stdDevGreen = getStandardDeviation(timesGreen);
             let faultsQuoteGreen = faultsGreen / countGreen;
 
-            countElement.textContent = 'Count: ' + count;
+            countElement.textContent = 'Count: ' + (times.length + faults);
             meanElement.textContent = 'Mean: ' + Math.round(meanDeltaTime) + ' ms';
             stdDevElement.textContent = 'Standard deviation: ' + Math.round(stdDev)
             faultElement.textContent = 'Faults: ' + faultsQuote;
@@ -150,11 +169,10 @@
 
         function startTestTrial() {
             // reset the stimulus
-            count++;
             setStimulusColor(circleStimulus, 'black', 0);
             setStimulusColor(squareStimulus, 'black', 0);
             stimulusIsVisible = false;
-
+            
 
             // schedule the stimulus to appear after a random amount of time
             let timeToWaitInSeconds = Math.random() * 4 + 2; // 2 - 6s
@@ -164,7 +182,7 @@
             );
         }
 
-        function setStimulusSize(stim, size) {
+        function setStimulusSize(stim, size){
             stim.style.width = size;
             stim.style.height = size;
         }
@@ -180,12 +198,12 @@
                 stim = squareStimulus;
                 rightStimulus = false;
                 setTimeout(
-                    startTestTrial,
-                    1000
-                );
+                startTestTrial,
+                1000
+            );
             }
 
-            let stimSize = getRndInteger(100, 300);
+            let stimSize = getRndInteger(100,300);
             setStimulusSize(stim, stimSize);
 
             if (getRndInteger(0, 2) == 0) {
@@ -207,6 +225,20 @@
             timeElement.textContent = deltaTime + ' ms';
         }
 
+
+        function makeTheCircleBoiDarkerAlotOfTimes() {
+            const stimulus = stimulusElement;
+            let opacity = 0;
+            let interval = setInterval(function makeTheCircleBoiDarker() {
+                if (opacity < 1 && stimulusIsVisible) {
+                    stimulusElement.style.opacity = opacity;
+                    opacity += 0.01;
+                } else {
+                    clearInterval(interval)
+                }
+            },
+                100);
+        }
 
         function getRndInteger(min, max) {
             return Math.floor(Math.random() * (max - min)) + min;
@@ -249,7 +281,7 @@
                     recordStimulusReactionTime();
                     // start next trial
                     startTestTrial();
-                } else if (stimulusIsVisible && !rightStimulus) {
+                } else if(stimulusIsVisible && !rightStimulus) {
                     faults++;
                     startTestTrial();
                 }
