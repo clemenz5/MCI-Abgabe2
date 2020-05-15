@@ -69,6 +69,8 @@
         // the amount of faults
         let faults = 0;
 
+        let count = 0;
+
         // DOM elements
         let timeElement = document.getElementById('time');
         let countElement = document.getElementById('count');
@@ -126,7 +128,7 @@
             let stdDev = getStandardDeviation(times);
             let correlation = calculateCorrelation();
 
-            countElement.textContent = 'Count: ' + (times.length + faults);
+            countElement.textContent = 'Count: ' + count;
             meanElement.textContent = 'Mean: ' + Math.round(meanDeltaTime) + ' ms';
             meanDistElement.textContent = 'Mean Distance: ' + Math.round(meanDealtaDist) + ' px';
             stdDevElement.textContent = 'SD: ' + Math.round(stdDev) + ' ms';
@@ -141,10 +143,11 @@
 
         function startTestTrial() {
             // reset the stimulus
+            count++;
             setStimulusColor(circleStimulus, 'black', 0);
             setStimulusColor(squareStimulus, 'black', 0);
             stimulusIsVisible = false;
-            
+
 
             // schedule the stimulus to appear after a random amount of time
             let timeToWaitInSeconds = Math.random() * 4 + 2; // 2 - 6s
@@ -154,12 +157,12 @@
             );
         }
 
-        function setStimulusSize(stim, size){
+        function setStimulusSize(stim, size) {
             stim.style.width = size;
             stim.style.height = size;
         }
 
-        async function showStimulus() {
+        function showStimulus() {
             setStimulusColor(circleStimulus, 'red', 0);
             setStimulusColor(squareStimulus, 'red', 0);
             let stim;
@@ -169,9 +172,13 @@
             } else {
                 stim = squareStimulus;
                 rightStimulus = false;
+                setTimeout(
+                    startTestTrial,
+                    1000
+                );
             }
 
-            let stimSize = getRndInteger(100,300);
+            let stimSize = getRndInteger(100, 300);
             setStimulusSize(stim, stimSize);
 
             if (getRndInteger(0, 2) == 0) {
@@ -258,7 +265,7 @@
                     recordStimulusDistance();
                     // start next trial
                     startTestTrial();
-                } else if(stimulusIsVisible && !rightStimulus) {
+                } else if (stimulusIsVisible && !rightStimulus) {
                     faults++;
                     startTestTrial();
                 }
