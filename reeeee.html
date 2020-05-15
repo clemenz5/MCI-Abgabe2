@@ -108,7 +108,8 @@
       let meanDeltaTime = getMean(times);
       let meanDealtaDist = getMean(distance);
       let stdDev = getStandardDeviation(times);
-      let correlation = calculateCorrelation();
+      let corr = calculateCorrelation();
+      let correlation = corr.toFixed(4);
 
       countElement.textContent = 'Count: ' + times.length;
       meanElement.textContent = 'Mean: ' + Math.round(meanDeltaTime) + ' ms';
@@ -187,6 +188,7 @@
       times = [];
       distance = [];
       experimentActive = true;
+      correlationElement.textContent = '';
       startTestTrial();
     }
 
