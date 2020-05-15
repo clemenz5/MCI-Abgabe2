@@ -92,7 +92,7 @@
       let kovarianzHelper = 0;
       var i;
       for (i = 0; i < times.length; i++) {
-        kovarianzHelper += ((times[i] - meanTime) ** 2) * ((distance[i] - meanDistance) ** 2);
+        kovarianzHelper += ((times[i] - meanTime)) * ((distance[i] - meanDistance));
       }
       return kovarianzHelper /= times.length;
     }
