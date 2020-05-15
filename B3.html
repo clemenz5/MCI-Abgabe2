@@ -17,10 +17,17 @@
     <p id="word"></p>
     <p id="count"></p>
     <p id="mean"></p>
-    <p id="meanDist"></p>
     <p id="sd"></p>
-    <p id="correlation"></p>
-    <p id="faults"></p>
+    <p id="frenchfaults"></p>
+    <p id="germanfaults"></p>
+    <p id="englishfaults"></p>
+    <p id="frenchmean"></p>
+    <p id="germanmean"></p>
+    <p id="englishmean"></p>
+
+    <p id="frenchsd"></p>
+    <p id="germansd"></p>
+    <p id="englishsd"></p>
 
     <script>
         // if true, the experiment is currently active
@@ -34,10 +41,14 @@
         let testStimulusTimeout;
 
         // recorded reaction times in milliseconds
-        let times = [];
+        let frenchTimes = [];
+        let germanTimes = [];
+        let englishTimes = [];
 
         // the amount of faults
-        let faults = 0;
+        let frenchFaults = 0;
+        let germanFaults = 0;
+        let englishFaults = 0;
 
         // the total amount of tries
         let count = 0;
@@ -59,11 +70,21 @@
         let timeElement = document.getElementById('time');
         let countElement = document.getElementById('count');
         let meanElement = document.getElementById('mean');
-        let meanDistElement = document.getElementById('meanDist');
         let stdDevElement = document.getElementById('sd');
         let instructionElement = document.getElementById('instruction');
-        let correlationElement = document.getElementById('correlation');
-        let faultElement = document.getElementById('faults');
+
+        let frenchFaultElement = document.getElementById('frenchfaults');
+        let germanFaultElement = document.getElementById('germanfaults');
+        let englishFaultElement = document.getElementById('englishfaults');
+
+        let frenchMeanElement = document.getElementById('frenchmean');
+        let germanMeanElement = document.getElementById('germanmean');
+        let englishMeanElement = document.getElementById('englishmean');
+
+        let frenchSDElement = document.getElementById('frenchsd');
+        let germanSDElement = document.getElementById('germansd');
+        let englishSDElement = document.getElementById('englishsd');
+
         let wordElement = document.getElementById('word');
 
         function getMean(data) {
@@ -84,42 +105,44 @@
             countElement.textContent = '';
             meanElement.textContent = '';
             stdDevElement.textContent = '';
-            meanDistElement.textContent = '';
+
+            germanFaultElement.textContent = '';
+            frenchFaultElement.textContent = '';
+            englishFaultElement.textContent = '';
+
+            germanMeanElement.textContent = '';
+            frenchMeanElement.textContent = '';
+            englishMeanElement.textContent = '';
+
+            germanSDElement.textContent = '';
+            frenchSDElement.textContent = '';
+            englishSDElement.textContent = '';
         }
 
-        function calculateKovarianz() {
-            let meanTime = getMean(times);
-            let meanDistance = getMean(distance);
-            let kovarianzHelper = 0;
-            var i;
-            for (i = 0; i < times.length; i++) {
-                kovarianzHelper += ((times[i] - meanTime) ** 2) * ((distance[i] - meanDistance) ** 2);
-            }
-            return kovarianzHelper /= times.length;
-        }
-
-        function calculateCorrelation() {
-            let timeStandardDeviation = getStandardDeviation(times);
-            let distanceStandardDeviation = getStandardDeviation(distance);
-            let kovarianz = calculateKovarianz();
-            return (kovarianz / (timeStandardDeviation * distanceStandardDeviation));
-        }
 
         function showResults() {
-            let meanDeltaTime = getMean(times);
-            let meanDealtaDist = getMean(distance);
-            let stdDev = getStandardDeviation(times);
-            let correlation = calculateCorrelation();
+            //let meanDeltaTime = getMean(times);
+            //let meanDealtaDist = getMean(distance);
+            //let stdDev = getStandardDeviation(times);
 
-            countElement.textContent = 'Count: ' + (times.length + faults);
-            meanElement.textContent = 'Mean: ' + Math.round(meanDeltaTime) + ' ms';
-            meanDistElement.textContent = 'Mean Distance: ' + Math.round(meanDealtaDist) + ' px';
-            stdDevElement.textContent = 'SD: ' + Math.round(stdDev) + ' ms';
-            correlationElement.textContent = 'Correlation: ' + correlation;
-            faultElement.textContent = 'Faults: ' + faults;
+            countElement.textContent = 'Count: ' + (germanTimes.length + frenchTimes.length + englishTimes.length);
+            //meanElement.textContent = 'Mean: ' + Math.round(meanDeltaTime) + ' ms';
+            //stdDevElement.textContent = 'SD: ' + Math.round(stdDev) + ' ms';
+            germanFaultElement.textContent = 'GermanFailRate: ' + (germanFaults / germanTimes.length);
+            frenchFaultElement.textContent = 'FrenchFailRate: ' + (frenchFaults / frenchTimes.length);
+            englishFaultElement.textContent = 'EnglishFailRate: ' + (englishFaults / englishTimes.length);
+
+            germanMeanElement.textContent = 'GermanMeanTime: ' + getMean(germanTimes);
+            frenchMeanElement.textContent = 'FrenchMeanTime: ' + getMean(frenchTimes);
+            englishMeanElement.textContent = 'EnglishMeanTime: ' + getMean(englishTimes);
+
+            germanSDElement.textContent = 'GermanSD: ' + getStandardDeviation(germanTimes);
+            frenchSDElement.textContent = 'FrenchSD: ' + getStandardDeviation(frenchTimes);
+            englishSDElement.textContent = 'EnglishSD: ' + getStandardDeviation(englishTimes);
         }
 
         function startTestTrial() {
+            if(index === wordList.length) stopExperiment();
             stimulusTimestamp = Date.now();
             showStimulus()
         }
@@ -130,7 +153,7 @@
             index++;
         }
 
-        function recordStimulusReactionTime() {
+        function recordStimulusReactionTime(times) {
             let deltaTime = Date.now() - stimulusTimestamp;
             times.push(deltaTime);
             timeElement.textContent = deltaTime + ' ms';
@@ -143,12 +166,16 @@
         function startExperiment() {
             clearResults(); // clear results of any previous tests
             instructionElement.textContent =
-                "Press 1 for french, 2 for english and 3 for german";
+                "Press 3 for french, 2 for english and 1 for german";
 
             // reset data and start tests
-            times = [];
-            distance = [];
-            faults = 0;
+            frenchTimes = [];
+            germanTimes = [];
+            englishTimes = [];
+    
+            germanFaults = 0;
+            frenchFaults = 0;
+            englishFaults = 0;
             index = 0;
             experimentActive = true;
             shuffle(wordList);
@@ -188,31 +215,34 @@
                     // stop the experiment and show results
                     stopExperiment();
                 }
-            } else if (event.key === '1') {
+            } else if (event.key === '3') {
                 // the french key
                 if (stimword[1] == LanguageEnums.french) {
-                    recordStimulusReactionTime();
+                    recordStimulusReactionTime(frenchTimes);
                     startTestTrial();
                 } else {
-                    faults++;
+                    frenchFaults++;
+                    recordStimulusReactionTime(frenchTimes);
                     startTestTrial();
                 }
             } else if (event.key === '2') {
                 // the englisch key
                 if (stimword[1] == LanguageEnums.english) {
-                    recordStimulusReactionTime();
+                    recordStimulusReactionTime(englishTimes);
                     startTestTrial();
                 } else {
-                    faults++;
+                    englishFaults++;
+                    recordStimulusReactionTime(englishTimes);
                     startTestTrial();
                 }
-            } else if (event.key === '3') {
+            } else if (event.key === '1') {
                 // the german key
                 if (stimword[1] == LanguageEnums.german) {
-                    recordStimulusReactionTime();
+                    recordStimulusReactionTime(germanTimes);
                     startTestTrial();
                 } else {
-                    faults++;
+                    germanFaults++;
+                    recordStimulusReactionTime(germanTimes);
                     startTestTrial();
                 }
             }
