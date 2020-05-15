@@ -33,11 +33,17 @@
     <div id="squareStimulus"></div>
     <p id="time"></p>
     <p id="count"></p>
+
+    <p id="mean"></p>
+    <p id="sd"></p>
+    <p id="faults"></p>
+
     <p id="meanRed"></p>
-    <p id="meanGreen"></p>
     <p id="sdRed"></p>
-    <p id="sdGreen"></p>
     <p id="faultsRed"></p>
+
+    <p id="meanGreen"></p>
+    <p id="sdGreen"></p>
     <p id="faultsGreen"></p>
 
     <script>
@@ -59,31 +65,35 @@
 
         // recorded reaction times in milliseconds
         let times = [];
-
-        // recorded distences to center of the screen
-        let distance = [];
+        let timesRed = [];
+        let timesGreen = [];
 
         // coordinates of the stimulus
         let stimX;
         let stimY;
 
         // the amount of faults
+        let faults = 0;
         let faultsRed = 0;
         let faultsGreen = 0;
 
+        let count = 0;
         let countRed = 0;
         let countGreen = 0;
 
         // DOM elements
         let timeElement = document.getElementById('time');
         let countElement = document.getElementById('count');
-        let meanElement = document.getElementById('meanRed');
-        let meanDistElement = document.getElementById('meanGreen');
+        let meanElement = document.getElementById('mean');
+        let meanRedElement = document.getElementById('meanRed');
+        let meanGreenElement = document.getElementById('meanGreen');
         let stdDevRedElement = document.getElementById('sdRed');
+        let stdDevElement = document.getElementById('sd');
         let stdDevGreenElement = document.getElementById('sdGreen');
         let instructionElement = document.getElementById('instruction');
         let circleStimulus = document.getElementById('circleStimulus');
         let squareStimulus = document.getElementById('squareStimulus');
+        let faultElement = document.getElementById('faults');
         let faultElementRed = document.getElementById('faultsRed');
         let faultElementGreen = document.getElementById('faultsGreen');
 
@@ -109,15 +119,28 @@
         }
 
         function showResults() {
+            count = countRed + countGreen;
+            faults = faultsRed + faultsGreen;
             let meanDeltaTime = getMean(times);
-            let meanDealtaDist = getMean(distance);
             let stdDev = getStandardDeviation(times);
+            let faultsQuote = faults / count;
+            let meanDeltaTimeRed = getMean(timesRed);
+            let stdDevRed = getStandardDeviation(timesRed);
+            let faultsQuoteRed = faultsRed / countRed;
+            let meanDeltaTimeGreen = getMean(timesGreen);
+            let stdDevGreen = getStandardDeviation(timesGreen);
+            let faultsQuoteGreen = faultsGreen / countGreen;
 
             countElement.textContent = 'Count: ' + count;
             meanElement.textContent = 'Mean: ' + Math.round(meanDeltaTime) + ' ms';
-            meanDistElement.textContent = 'Mean Distance: ' + Math.round(meanDealtaDist) + ' px';
-            
-            faultElement.textContent = 'Faults: ' + faults;
+            stdDevElement.textContent = 'Standard deviation: ' + Math.round(stdDev)
+            faultElement.textContent = 'Faults: ' + faultsQuote;
+            meanRedElement.textContent = 'Mean Red: ' + Math.round(meanDeltaTimeRed) + ' ms';
+            stdDevRedElement.textContent = 'Standard deviation Red: ' + Math.round(stdDevRed)
+            faultElementRed.textContent = 'Fail rate Red: ' + faultsQuoteRed;
+            meanGreenElement.textContent = 'Mean Green: ' + Math.round(meanDeltaTimeGreen) + ' ms';
+            stdDevGreenElement.textContent = 'Standard deviation Green: ' + Math.round(stdDevGreen)
+            faultElementGreen.textContent = 'Fail rate Green: ' + faultsQuoteGreen;
         }
 
         function setStimulusColor(stim, newColor, alpha) {
@@ -184,13 +207,6 @@
             timeElement.textContent = deltaTime + ' ms';
         }
 
-        function recordStimulusDistance() {
-            let distX;
-            let distY;
-            distX = Math.abs(window.innerWidth / 2 - stimX);
-            distY = Math.abs(window.innerHeight / 2 - stimY);
-            distance.push(Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2)));
-        }
 
         function getRndInteger(min, max) {
             return Math.floor(Math.random() * (max - min)) + min;
@@ -203,7 +219,6 @@
 
             // reset data and start tests
             times = [];
-            distance = [];
             faults = 0;
             experimentActive = true;
             startTestTrial();
@@ -232,7 +247,6 @@
                 if (stimulusIsVisible && rightStimulus) {
                     // record reaction time
                     recordStimulusReactionTime();
-                    recordStimulusDistance();
                     // start next trial
                     startTestTrial();
                 } else if (stimulusIsVisible && !rightStimulus) {
